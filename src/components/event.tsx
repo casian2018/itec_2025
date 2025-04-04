@@ -41,14 +41,15 @@ const EventList: React.FC = () => {
             <h1 className='text-3xl font-extrabold mb-6 text-gray-800'>Upcoming Events</h1>
             <div className='flex overflow-x-auto space-x-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
             {events.map(event => (
-                <div
-                key={event.id}
-                className='min-w-[320px] bg-gradient-to-r from-white to-gray-50 shadow-lg rounded-xl p-6 border border-gray-300 hover:shadow-xl transition-shadow duration-300'
-                >
-                <h2 className='text-xl font-bold text-gray-900'>{event.title}</h2>
-                <p className='text-sm text-gray-600 italic'>{new Date(event.date).toLocaleDateString()}</p>
-                <p className='mt-4 text-gray-700 leading-relaxed'>{event.description}</p>
-                </div>
+            <div
+            key={event.id}
+            onClick={() => window.location.href = `/app/events/${event.id}`}
+            className='min-w-[320px] bg-gradient-to-r from-white to-gray-50 shadow-lg rounded-xl p-6 border border-gray-300 hover:shadow-xl transition-shadow duration-300 cursor-pointer'
+            >
+            <h2 className='text-xl font-bold text-gray-900'>{event.title}</h2>
+            <p className='text-sm text-gray-600 italic'>{new Date(event.date).toLocaleDateString()}</p>
+            <p className='mt-4 text-gray-700 leading-relaxed'>{event.description}</p>
+            </div>
             ))}
             </div>
         </div>
