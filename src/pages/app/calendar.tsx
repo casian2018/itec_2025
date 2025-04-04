@@ -19,7 +19,6 @@ export default function dashboard() {
         {selectedDate && <p>Selected Date: {selectedDate.toDateString()}</p>}
         {selectedDate && <p>Selected Date: {selectedDate.toDateString()}</p>}
       </div>
-      <Events />
     </>
   );
 }
