@@ -3,19 +3,21 @@ import { auth } from "@/pages/api/firebase/firebase";
 import { signInWithEmailAndPassword, AuthError } from "firebase/auth";
 import { signInWithGoogle } from "./handleSignIn"; // Import the function
 import { useRouter } from "next/router";
+import Cookies from "js-cookie";
+
 
 
 function Login(): JSX.Element {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string>("");
-  const Router = useRouter();
+  const router = useRouter();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      Router.push("/");
+      router.push("/app/profile");
     } catch (err) {
       const authError = err as AuthError;
       setError(authError.message);
@@ -25,7 +27,9 @@ function Login(): JSX.Element {
   const handleGoogleSignIn = async (): Promise<void> => {
     try {
       await signInWithGoogle();
-      Router.push("/");
+      router.push("/app/profile");   
+      console.log("User ID:", Cookies.get("uid")); // ✅ Debugging
+      console.log("Username:", Cookies.get("username"));
     } catch (err) {
       const authError = err as AuthError;
       setError(authError.message);
