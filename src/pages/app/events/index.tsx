@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import Nav from "@/components/nav";
 import Calendar from "@/components/calendar";
-import Events from "@/components/event";
+import Events from "@/components/EventList";
 import CreateEvents from "@/components/createEvent";
 export default function dashboard() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
