@@ -1,33 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { getAuth, User } from 'firebase/auth'; // Ensure correct import
-import { auth } from '@/pages/api/firebase/firebase'; // Ensure auth is correctly exported
-
+import { User } from 'firebase/auth';
+import { auth } from '@/pages/api/firebase/firebase'; // ✅ Use the shared auth instance
 
 const Profile = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string>("User");
   const [email, setEmail] = useState<string>("");
 
-
   useEffect(() => {
-    const authInstance = getAuth(); // Ensure auth is correctly initialized
-    const user = authInstance.currentUser;
-    console.log(user); // Logs the current user
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setCurrentUser(user);
+        setUsername(user.displayName || "User");
+        setEmail(user.email || "");
+      } else {
+        setCurrentUser(null);
+        setUsername("Guest");
+        setEmail("");
+      }
+    });
 
-    if (user) {
-      setCurrentUser(user);
-      setUsername(user.displayName || "User");
-      setEmail(user.email || "");
-    }
-  }, []); // Empty dependency array ensures this runs only once
+    return () => unsubscribe(); // Cleanup listener on unmount
+  }, []);
 
   return (
-    <div>
-      <h1>Welcome to the Profile Page</h1>
-      <p>Username: {username}</p>
-      <p>Email: {email}</p>
-      <div>
-      </div>
+    <div className="p-6 bg-gray-900 text-white rounded-lg shadow-md max-w-md mx-auto mt-10">
+      <h1 className="text-2xl font-bold mb-4">Profile</h1>
+      <p><span className="font-semibold">Username:</span> {username}</p>
+      <p><span className="font-semibold">Email:</span> {email}</p>
     </div>
   );
 };
