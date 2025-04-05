@@ -122,6 +122,7 @@ const VideoCall = () => {
     }
 
     return (
+        <div className="container">
         <div className="video-call-container">
             <h1 className="title">Video Call - Channel: {channelName}</h1>
             <div className="video-container">
@@ -156,11 +157,20 @@ const VideoCall = () => {
                     Lower Hand
                 </button>
             </div>
+            </div>
             <style jsx>{`
+                .container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100vh;
+                    background-color: #f0f0f0;
+                }
                 .video-call-container {
                     font-family: "Roboto", sans-serif;
-                    color: #fff;
-                    background: linear-gradient(135deg, #1f1f1f, #3a3a3a);
+                    color: black;
+                    background: white;
                     min-height: 100vh;
                     display: flex;
                     flex-direction: column;
@@ -171,7 +181,6 @@ const VideoCall = () => {
                 .title {
                     font-size: 2rem;
                     margin-bottom: 20px;
-                    text-shadow: 0 0 10px #00eaff;
                 }
                 .video-container {
                     display: flex;
@@ -182,16 +191,15 @@ const VideoCall = () => {
                     width: 320px;
                     height: 240px;
                     background-color: #000;
-                    border: 2px solid #00eaff;
+                    border: 2px solid green;
                     border-radius: 10px;
-                    box-shadow: 0 0 20px rgba(0, 234, 255, 0.5);
                 }
                 .controls {
                     display: flex;
                     gap: 10px;
                 }
                 .control-button {
-                    background: #00eaff;
+                    background: green;
                     color: #000;
                     border: none;
                     padding: 10px 20px;
@@ -201,7 +209,7 @@ const VideoCall = () => {
                     transition: all 0.3s ease;
                 }
                 .control-button:hover {
-                    background: #007a99;
+                    background: red;
                     color: #fff;
                 }
                 .control-button:disabled {
