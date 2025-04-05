@@ -1,16 +1,45 @@
-import CreateEvent from '@/components/createEvent'
-import React from 'react'
+import React, { useState } from 'react'
+import Dropzone from '../components/dropzone'
 
-const test = () => {
+interface DropzoneProps {
+  onFilesAdded: (files: File[]) => Promise<void> | void;
+}
+
+
+const Test = () => {
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+
+  const handleFilesAdded = async (files: File[]) => {
+    setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('file', file);
+    });
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (response.ok) {
+      console.log('Files uploaded successfully');
+    } else {
+      console.error('Error uploading files');
+    }
+  };
+
   return (
-    <>
-    <CreateEvent isOpen={true} onClose={function (): void {
-              throw new Error('Function not implemented.')
-          } } onSave={function (eventData: { date: string; title: string; description: string; doc_id: string }): void {
-              throw new Error('Function not implemented.')
-          } } />
-    </>
+    <div>
+      <h1>Upload Files</h1>
+      <Dropzone onFilesAdded={handleFilesAdded} />
+      <div>
+        {uploadedFiles.map((file, index) => (
+          <div key={index}>{file.name}</div>
+        ))}
+      </div>
+    </div>
   )
 }
 
-export default test
+export default Test;

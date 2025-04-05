@@ -1,4 +1,7 @@
+import { useRouter } from "next/router";
+
 export default function Home() {
+  const router = useRouter();
 
 
   
@@ -7,7 +10,7 @@ export default function Home() {
       {/* Navbar */}
       <nav className="bg-white py-2 border-0 w-full fixed top-0 left-0 z-10 shadow-sm">
         <div className="flex items-center justify-between max-w-screen-xl px-4 mx-auto">
-          <a href="#" className="flex items-center">
+          <a href="/dashboard" className="flex items-center">
             <img
               src="./images/logo.png"
               className="h-12 w-12 mr-3"
@@ -19,7 +22,7 @@ export default function Home() {
           <div className="flex items-center space-x-4">
             <button
               className="px-5 py-2 rounded-full bg-green-700 text-white font-medium shadow hover:bg-green-800 transition"
-              onClick={() => {}}
+              onClick={() => {router.push('/dashboard')}}
             >
               Explore More
             </button>
@@ -39,7 +42,7 @@ export default function Home() {
         </p>
         <div className="mt-8">
           <a
-            href="#"
+            href="/dashboard"
             className="bg-white text-green-900 font-semibold py-3 px-6 rounded-full shadow-md hover:bg-gray-100 transition"
           >
             Is Online School for You?
@@ -89,7 +92,7 @@ export default function Home() {
 
   <div className="mt-8">
     <a
-      href="#"
+      href="/dashboard"
       className="bg-green-900 text-white font-semibold py-3 px-6 rounded-full shadow-md hover:bg-green-800 transition"
     >
       Explore All Features
@@ -159,13 +162,13 @@ export default function Home() {
       </span>
 
       <div className="flex space-x-6 text-sm text-gray-300">
-        <a href="/terms" className="hover:text-green-400 transition cursor-pointer">
+        <a href="/#" className="hover:text-green-400 transition cursor-pointer">
           Terms & Conditions
         </a>
-        <a href="/privacy" className="hover:text-green-400 transition cursor-pointer">
+        <a href="/#" className="hover:text-green-400 transition cursor-pointer">
           Privacy Policy
         </a>
-        <a href="/contact" className="hover:text-green-400 transition cursor-pointer">
+        <a href="/#" className="hover:text-green-400 transition cursor-pointer">
           Contact Us
         </a>
       </div>

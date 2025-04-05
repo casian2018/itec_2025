@@ -98,3 +98,10 @@
   margin-right: auto;
   display: block;
 }
+.dropzone {
+  border: 2px dashed #0070f3;
+  padding: 20px;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
