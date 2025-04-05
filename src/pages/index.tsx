@@ -1,4 +1,7 @@
 export default function Home() {
+
+
+  
   return (
     <div className="w-screen min-h-screen flex flex-col pt-20 bg-gray-50">
       {/* Navbar */}
