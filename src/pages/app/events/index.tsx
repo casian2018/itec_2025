@@ -54,7 +54,6 @@
 //   );
 // }
 import React, { useEffect, useState } from "react";
-import Nav from "@/components/nav";
 import EventList from "@/components/EventList";
 import CreateEvents from "@/components/createEvent";
 import { collection, getDocs } from "firebase/firestore";
@@ -107,7 +106,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col items-center justify-start min-h-screen bg-gray-100 py-10">
-      <Nav />
 
       <div className="w-full max-w-4xl px-4">
         {loading ? (
