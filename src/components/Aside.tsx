@@ -1,34 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import { signOut } from "firebase/auth";
 import { auth } from "@/pages/api/firebase/firebase";
 import { useRouter } from "next/router";
+
 function Aside() {
-	const router=useRouter();
-    
-    const [activeLink, setActiveLink] = useState("/dashboard");
-    
+	const router = useRouter();
+	const [activeLink, setActiveLink] = useState("");
 
-    const handleSignOut = async () => {
-        try {
-          await signOut(auth); // Firebase sign out
-      
-          // Optional: Call your API to do server-side cleanup if needed
-          await fetch("/api/Auth/logout", { method: "POST" });
-      
-          // Client-side cookie cleanup using js-cookie
-          Cookies.remove("uid");
-          Cookies.remove("username");
-          Cookies.remove("email");
-      
-          // Redirect
-          router.push("/auth/login");
-        } catch (err) {
-          console.error("Error signing out:", err);
-        }
-      };
-      
+	useEffect(() => {
+		setActiveLink(router.pathname);
+	}, [router.pathname]);
 
+	const handleSignOut = async () => {
+		try {
+			await signOut(auth);
+			await fetch("/api/Auth/logout", { method: "POST" });
+
+			Cookies.remove("uid");
+			Cookies.remove("username");
+			Cookies.remove("email");
+
+			router.push("/auth/login");
+		} catch (err) {
+			console.error("Error signing out:", err);
+		}
+	};
 
 	const navItems = [
 		{
@@ -49,8 +46,25 @@ function Aside() {
 				</svg>
 			),
 		},
+		{
+			label: "Calendar",
+			href: "/dashboard/calendar",
+			icon: (
+				<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10m-9 4h4m-6 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+				</svg>
+			),
+		},
+		{
+			label: "Events",
+			href: "/app/events",
+			icon: (
+				<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 8v8m4-4H8" />
+				</svg>
+			),
+		},
 	];
-
 	const logoutItem = {
 		label: "Ieși din cont",
 		onClick: "/api/logout",
@@ -60,7 +74,6 @@ function Aside() {
 			</svg>
 		),
 	};
-
 	return (
 		<div className="bg-green-700 min-h-screen w-50 min-w-50 max-w-50 p-4 text-white flex flex-col justify-between">
 			<div>
@@ -77,31 +90,10 @@ function Aside() {
 				</div>
 
 				<nav className="flex flex-col gap-2">
-					{[
-						...navItems,
-						{
-							label: "Calendar",
-							href: "/dashboard/calendar",
-							icon: (
-								<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10m-9 4h4m-6 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
-								</svg>
-							),
-						},
-						{
-							label: "Events",
-							href: "/app/events",
-							icon: (
-								<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 8v8m4-4H8" />
-								</svg>
-							),
-						},
-					].map((item) => (
+					{navItems.map((item) => (
 						<a
 							key={item.href}
 							href={item.href}
-							onClick={() => setActiveLink(item.href)}
 							className={`flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer ${
 								activeLink === item.href ? "bg-green-900" : "hover:bg-green-800"
 							}`}
@@ -116,7 +108,7 @@ function Aside() {
 			<div>
 				<a
 					onClick={handleSignOut}
-					className={`flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-green-800`}
+					className="flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-green-800"
 				>
 					{logoutItem.icon}
 					<p>{logoutItem.label}</p>
