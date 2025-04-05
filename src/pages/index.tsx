@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div className="w-screen h-full flex flex-col pt-20"> {/* Added padding-top to account for fixed navbar height */}
+    <div className="w-screen h-full flex flex-col pt-20">
       <nav className="bg-white border-gray-200 py-2 w-full fixed top-0 left-0 z-10 shadow-md">
         <div className="flex flex-wrap items-center justify-between max-w-screen-xl px-4 mx-auto">
           <a href="#" className="flex items-center">
@@ -18,7 +18,6 @@ export default function Home() {
           </div>
         </div>
       </nav>
-      
       <div className="bg-gradient-to-r from-green-900 to-green-800 text-white py-16 px-6 text-center">
         <h1 className="text-4xl md:text-5xl font-bold uppercase">
           Collaborate, Learn, Succeed
@@ -44,7 +43,6 @@ export default function Home() {
       <div className="py-8">
         {/* Replaced "ffff" with proper spacing */}
       </div>
-      
       <div className="bg-green-700 text-white p-8 max-w-md w-full rounded-lg shadow-lg"> {/* Removed mx-auto to keep it left-aligned */}
         <h2 className="text-xl font-semibold mb-4">
           Want to know how online learning can work for you?
@@ -90,6 +88,14 @@ export default function Home() {
             NEXT
           </button>
         </form>
+      </div>
+      <div>
+      <footer className="bg-white rounded-lg m-4 bg-gray-800">
+    <div className="w-full mx-auto max-w-screen-xl p-4 md:flex md:items-center md:justify-center">
+    <span className="text-sm text-black sm:text-center dark:text-black">© 2025 <a className="hover:underline hover:text-red-500 hover:cursor-pointer">Academix™</a>. All Rights Reserved.
+    </span>
+    </div>
+</footer>
       </div>
     </div>
   );
