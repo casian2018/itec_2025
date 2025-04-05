@@ -6,13 +6,6 @@ import { User } from 'firebase/auth';
 import Aside from '@/components/Aside';
 import Calendar from '@/components/calendar';
 
-// interface Event {
-//   id: string;
-//   title: string;
-//   date: string; // format: YYYY-MM-DD
-//   description: string;
-// }
-
 const Dashboard = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string>("User");
@@ -37,32 +30,6 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  // useEffect(() => {
-  //   const fetchEvents = async () => {
-  //     try {
-  //       const querySnapshot = await getDocs(collection(db, "events"));
-  //       const fetchedEvents: Event[] = [];
-
-  //       querySnapshot.forEach((doc) => {
-  //         const data = doc.data();
-  //         fetchedEvents.push({
-  //           id: doc.id,
-  //           title: data.title,
-  //           date: data.date,
-  //           description: data.description,
-  //         });
-  //       });
-
-  //       setEvents(fetchedEvents);
-  //     } catch (error) {
-  //       console.error("Error fetching events: ", error);
-  //     }
-  //   };
-
-  //   fetchEvents();
-  // }, []);
-
-  // const todaysEvents = events.filter((event) => event.date === today);
 
   return (
     <div className="flex min-h-screen">
