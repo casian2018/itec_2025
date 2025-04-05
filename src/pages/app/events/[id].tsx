@@ -1,11 +1,11 @@
-'use client';
+import React, { useEffect, useState } from "react";
+import {  useRouter } from "next/router";
+import { doc, getDoc, updateDoc, arrayUnion } from "firebase/firestore";
+import { db, auth } from "@/pages/api/firebase/firebase";
+import { signOut } from "firebase/auth";
+import Cookies from "js-cookie";
+import Aside from "@/components/Aside";
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
-import { db } from '@/pages/api/firebase/firebase';
-import { useDropzone } from 'react-dropzone';
-import Cookies from 'js-cookie';
 
 interface Event {
   id: string;
@@ -16,190 +16,303 @@ interface Event {
   uploadedFiles?: string[];
 }
 
-const dropzoneStyle: React.CSSProperties = {
-  border: '2px dashed #cccccc',
-  borderRadius: '4px',
-  padding: '20px',
-  textAlign: 'center',
-  cursor: 'pointer',
-};
-
 const EventDetails: React.FC = () => {
-  const params = useParams();
-  const id = params?.id as string | undefined;
-
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [attending, setAttending] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
-
-  const userId = Cookies.get('email') || '';
-  const userName = Cookies.get('name') || '';
-  const userUid = Cookies.get('uid') || '';
-
-  useEffect(() => {
-    const fetchEvent = async () => {
-      if (!id || !userId) return;
-
-      try {
-        const docRef = doc(db, 'events', id);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const eventData = { id: docSnap.id, ...docSnap.data() } as Event;
-          setEvent(eventData);
-
-          if (eventData.attendees?.includes(userId)) {
-            setAttending(true);
-          }
-
-          if (eventData.uploadedFiles) {
-            setUploadedFiles(eventData.uploadedFiles);
-          }
-        } else {
-          console.error('No such event!');
+    const router = useRouter();
+    const { id } = router.query;
+    const [event, setEvent] = useState<Event | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [attending, setAttending] = useState(false);
+    const [userId, setUserId] = useState<string | null>(null);
+    const [username, setUsername] = useState<string | null>(null);
+    const [activeLink, setActiveLink] = useState(router.pathname);
+    
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            await fetch("/api/Auth/logout", { method: "POST" });
+            Cookies.remove("uid");
+            Cookies.remove("username");
+            Cookies.remove("email");
+            router.push("/auth/login");
+        } catch (err) {
+            console.error("Error signing out:", err);
         }
-      } catch (err) {
-        console.error('Error fetching event:', err);
-      } finally {
-        setLoading(false);
-      }
     };
 
-    fetchEvent();
-  }, [id, userId]);
+    const navItems = [
+        {
+            label: "Dashboard",
+            href: "/dashboard",
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            ),
+        },
+        {
+            label: "Profil",
+            href: "/dashboard/profile",
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+            ),
+        },
+    ];
 
-  const handleAttend = async () => {
-    if (!id || !event || !userId) return;
-
-    try {
-      const eventDocRef = doc(db, 'events', id);
-      await updateDoc(eventDocRef, {
-        attendees: arrayUnion(userId),
-      });
-
-      await updateDoc(doc(db, 'users', userId), {
-        events_attended: arrayUnion({
-          eventId: id,
-          eventTitle: event.title,
-          eventDate: event.date,
-          attendedAt: new Date().toISOString(),
-        }),
-      });
-
-      setAttending(true);
-      alert('You are now attending this event!');
-    } catch (err) {
-      console.error('Error attending event:', err);
-    }
-  };
-
-  const onDrop = useCallback(
-    async (acceptedFiles: File[]) => {
-      if (!id || acceptedFiles.length === 0) return;
-
-      const formData = new FormData();
-      acceptedFiles.forEach((file) => {
-        formData.append('file', file);
-      });
-
-      try {
-        const res = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        const data = await res.json();
-
-        if (!data.files || !Array.isArray(data.files)) {
-          console.error('Unexpected upload response:', data);
-          alert('Upload failed. Unexpected server response.');
-          return;
+    useEffect(() => {
+        const cookieUserId = Cookies.get("uid");
+        const cookieUsername = Cookies.get("username");
+        
+        if (cookieUserId) {
+            setUserId(cookieUserId);
+            if (cookieUsername) {
+                setUsername(cookieUsername);
+            }
+        } else {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+                if (user) {
+                    setUserId(user.uid);
+                    setUsername(user.displayName || user.email?.split('@')[0] || null);
+                } else {
+                    router.push("/login?redirect=" + router.asPath);
+                }
+            });
+            
+            return () => unsubscribe();
         }
+    }, [router]);
 
-        const filenames: string[] = data.files.map((f: any) => f.newFilename);
+    useEffect(() => {
+        const fetchEvent = async () => {
+            if (!id || !userId) return;
+            
+            try {
+                const docRef = doc(db, "events", id as string);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const eventData = { id: docSnap.id, ...docSnap.data() } as Event;
+                    setEvent(eventData);
+                    
+                    if (eventData.attendees?.includes(userId)) {
+                        setAttending(true);
+                    }
+                } else {
+                    console.error("No such event!");
+                }
+            } catch (error) {
+                console.error("Error fetching event:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        if (userId) {
+            fetchEvent();
+        }
+    }, [id, userId]);
 
-        setUploadedFiles((prev) => [...prev, ...filenames]);
+    const handleAttend = async () => {
+        if (!id || !event || !userId) {
+            if (!userId) {
+                alert("Please log in to attend this event");
+                router.push("/login?redirect=" + router.asPath);
+            }
+            return;
+        }
+        
+        try {
+            const eventDocRef = doc(db, "events", id as string);
+            await updateDoc(eventDocRef, {
+                attendees: arrayUnion(userId)
+            });
+            
+            const userDocRef = doc(db, "users", userId);
+            await updateDoc(userDocRef, {
+                events_attended: arrayUnion({
+                    eventId: id,
+                    eventTitle: event.title,
+                    eventDate: event.date,
+                    attendedAt: new Date().toISOString()
+                })
+            });
+            
+            setAttending(true);
+            alert("You are now attending this event!");
+        } catch (error) {
+            console.error("Error attending event:", error);
+            alert("An error occurred while trying to attend the event.");
+        }
+    };
 
-        const eventDocRef = doc(db, 'events', id);
-        await updateDoc(eventDocRef, {
-          uploadedFiles: arrayUnion(...filenames),
-        });
+    if (loading || !userId) {
+        return (
+            <div className="flex min-h-screen">
+                <SideNav activeLink={activeLink} setActiveLink={setActiveLink} handleSignOut={handleSignOut} />
+                <div className="flex-1 min-h-screen bg-gray-50 p-8">
+                    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 text-center">
+                        <div className="animate-pulse">
+                            <div className="h-8 bg-green-100 rounded w-1/2 mx-auto mb-4"></div>
+                            <div className="h-4 bg-green-50 rounded w-1/3 mx-auto mb-6"></div>
+                            <div className="space-y-3">
+                                <div className="h-4 bg-green-50 rounded"></div>
+                                <div className="h-4 bg-green-50 rounded w-5/6"></div>
+                                <div className="h-4 bg-green-50 rounded w-2/3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-        alert('Files uploaded successfully!');
-      } catch (error) {
-        console.error('Upload failed:', error);
-        alert('Failed to upload files.');
-      }
-    },
-    [id]
-  );
+    if (!event) {
+        return (
+            <div className="flex min-h-screen">
+                <SideNav activeLink={activeLink} setActiveLink={setActiveLink} handleSignOut={handleSignOut} />
+                <div className="flex-1 min-h-screen bg-gray-50 p-8">
+                    <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md p-6 text-center">
+                        <h2 className="text-2xl font-bold text-green-800 mb-2">Event Not Found</h2>
+                        <p className="text-gray-600 mb-4">The event you're looking for doesn't exist.</p>
+                        <button 
+                            onClick={() => router.push("/events")}
+                            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        >
+                            Browse Events
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.png', '.jpg'],
-      'application/pdf': ['.pdf'],
-    },
-  });
-
-  if (loading) return <div className="p-4 text-center">Loading event...</div>;
-  if (!event) return <div className="p-4 text-center">Event not found.</div>;
-
-  return (
-    <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden my-6">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-2">{event.title}</h1>
-        <p className="text-gray-600 mb-2">
-          <strong>Date:</strong>{' '}
-          {event.date ? new Date(event.date).toLocaleDateString() : 'Invalid date'}
-        </p>
-        <p className="text-gray-700 mb-4">{event.description}</p>
-
-        <button
-          onClick={handleAttend}
-          disabled={attending}
-          className={`px-4 py-2 rounded font-medium ${
-            attending
-              ? 'bg-green-100 text-green-800 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          {attending ? 'You are attending' : 'Attend Event'}
-        </button>
-
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">Upload Files</h2>
-          <div {...getRootProps()} style={dropzoneStyle}>
-            <input {...getInputProps()} />
-            <p>Drag & drop files here, or click to select</p>
-          </div>
+    return (
+        <div className="flex min-h-screen">
+            <SideNav activeLink={activeLink} setActiveLink={setActiveLink} handleSignOut={handleSignOut} />
+            
+            <div className="flex-1 min-h-screen bg-gray-50 p-4 md:p-8">
+                <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+                    {/* Event Header */}
+                    <div className="bg-green-700 px-6 py-4">
+                        <h1 className="text-2xl font-bold text-white">{event.title}</h1>
+                        <div className="flex items-center text-green-100 mt-2">
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <span>{new Date(event.date).toLocaleDateString('en-US', { 
+                                weekday: 'long', 
+                                year: 'numeric', 
+                                month: 'long', 
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            })}</span>
+                        </div>
+                    </div>
+                    
+                    {/* Event Content */}
+                    <div className="p-6">
+                        <div className="prose max-w-none text-gray-700 mb-8">
+                            <p className="whitespace-pre-line">{event.description}</p>
+                        </div>
+                        
+                        {/* Attendees Section */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-semibold text-green-800 mb-3">Attendees</h3>
+                            {event.attendees && event.attendees.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                    {event.attendees.map((attendee, index) => (
+                                        <span key={index} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                                            {attendee === userId ? "You" : `Attendee ${index + 1}`}
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500">No attendees yet. Be the first!</p>
+                            )}
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-4">
+                            {userId && (
+                                <button
+                                    onClick={handleAttend}
+                                    disabled={attending}
+                                    className={`px-6 py-3 rounded-lg font-medium text-center transition-colors ${
+                                        attending 
+                                            ? "bg-green-100 text-green-800 border border-green-300 cursor-not-allowed" 
+                                            : "bg-green-600 text-white hover:bg-green-700"
+                                    }`}
+                                >
+                                    {attending ? (
+                                        <span className="flex items-center justify-center">
+                                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            You're Attending
+                                        </span>
+                                    ) : (
+                                        "Attend This Event"
+                                    )}
+                                </button>
+                            )}
+                            
+                            {!userId && (
+                                <button
+                                    onClick={() => router.push("/login?redirect=" + router.asPath)}
+                                    className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                                >
+                                    Login to Attend
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    );
+};
 
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">Uploaded Files</h2>
-          <ul className="list-disc pl-5">
-            {uploadedFiles.length > 0 ? (
-              uploadedFiles.map((name, idx) => (
-                <li key={idx}>
-                  <a
-                    className="text-blue-600 underline"
-                    href={`/uploads/${name}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {name}
-                  </a>
-                </li>
-              ))
-            ) : (
-              <li>No files uploaded yet.</li>
-            )}
-          </ul>
-        </div>
-      </div>
-    </div>
-  );
+const SideNav = ({ activeLink, setActiveLink, handleSignOut }: { 
+    activeLink: string; 
+    setActiveLink: (link: string) => void; 
+    handleSignOut: () => void 
+}) => {
+    const navItems = [
+        {
+            label: "Dashboard",
+            href: "/dashboard",
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+                </svg>
+            ),
+        },
+        {
+            label: "Profil",
+            href: "/dashboard/profile",
+            icon: (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                </svg>
+            ),
+        },
+    ];
+
+    const logoutItem = {
+        label: "Ieși din cont",
+        onClick: handleSignOut,
+        icon: (
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+            </svg>
+        ),
+    };
+
+    return (
+        <Aside/>
+    );
 };
 
 export default EventDetails;
