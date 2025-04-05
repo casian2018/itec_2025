@@ -64,7 +64,6 @@ function Aside() {
 	return (
 		<div className="bg-green-700 min-h-screen w-50 min-w-50 max-w-50 p-4 text-white flex flex-col justify-between">
 			<div>
-				{/* Logo and Title */}
 				<div className="flex items-center gap-3 mb-6">
 					<div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
 						<div className="w-8 h-8 rounded-full overflow-hidden relative">
@@ -77,9 +76,28 @@ function Aside() {
 					<h1 className="text-xl font-bold">Academix</h1>
 				</div>
 
-				{/* Main nav items */}
 				<nav className="flex flex-col gap-2">
-					{navItems.map((item) => (
+					{[
+						...navItems,
+						{
+							label: "Calendar",
+							href: "/dashboard/calendar",
+							icon: (
+								<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10m-9 4h4m-6 4h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+								</svg>
+							),
+						},
+						{
+							label: "Events",
+							href: "/app/events",
+							icon: (
+								<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 8v8m4-4H8" />
+								</svg>
+							),
+						},
+					].map((item) => (
 						<a
 							key={item.href}
 							href={item.href}
@@ -95,16 +113,14 @@ function Aside() {
 				</nav>
 			</div>
 
-			{/* Logout at bottom */}
 			<div>
 				<a
-                    href=""
-                    onClick={handleSignOut}
-                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-green-800`}
-                >
-                    {logoutItem.icon}
-                    <p>{logoutItem.label}</p>
-                </a>
+					onClick={handleSignOut}
+					className={`flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer hover:bg-green-800`}
+				>
+					{logoutItem.icon}
+					<p>{logoutItem.label}</p>
+				</a>
 			</div>
 		</div>
 	);

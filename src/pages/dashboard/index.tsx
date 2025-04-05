@@ -1,68 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { auth, db } from '@/pages/api/firebase/firebase';
-import { collection, getDocs } from 'firebase/firestore';
-import { User } from 'firebase/auth';
-// import EventList from '@/components/EventList';
+import { useRouter } from 'next/router';
+import { auth } from '@/pages/api/firebase/firebase';
 import Aside from '@/components/Aside';
 import Calendar from '@/components/calendar';
 
-// interface Event {
-//   id: string;
-//   title: string;
-//   date: string; // format: YYYY-MM-DD
-//   description: string;
-// }
+const checkAuth = async (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    auth.onAuthStateChanged((user) => {
+      resolve(!!user);
+    });
+  });
+};
 
 const Dashboard = () => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [username, setUsername] = useState<string>("User");
   const [email, setEmail] = useState<string>("");
-  // const [events, setEvents] = useState<Event[]>([]);
-
-  const today = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setCurrentUser(user);
-        setUsername(user.displayName || "User");
-        setEmail(user.email || "");
+    const authenticate = async () => {
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) {
+        router.push('/auth/login'); // Redirect to login page if not authenticated
       } else {
-        setCurrentUser(null);
-        setUsername("Guest");
-        setEmail("");
+        const user = auth.currentUser;
+        setUsername(user?.displayName || "User");
+        setEmail(user?.email || "");
       }
-    });
+    };
 
-    return () => unsubscribe();
-  }, []);
-
-  // useEffect(() => {
-  //   const fetchEvents = async () => {
-  //     try {
-  //       const querySnapshot = await getDocs(collection(db, "events"));
-  //       const fetchedEvents: Event[] = [];
-
-  //       querySnapshot.forEach((doc) => {
-  //         const data = doc.data();
-  //         fetchedEvents.push({
-  //           id: doc.id,
-  //           title: data.title,
-  //           date: data.date,
-  //           description: data.description,
-  //         });
-  //       });
-
-  //       setEvents(fetchedEvents);
-  //     } catch (error) {
-  //       console.error("Error fetching events: ", error);
-  //     }
-  //   };
-
-  //   fetchEvents();
-  // }, []);
-
-  // const todaysEvents = events.filter((event) => event.date === today);
+    authenticate();
+  }, [router]);
 
   return (
     <div className="flex min-h-screen">
@@ -76,9 +44,6 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <div className="flex justify-between items-center">
             <div>
-              {/* <h3 className="text-2xl font-bold text-gray-800">Evenimente</h3>
-              <p className="text-gray-500">{new Date().toLocaleDateString()}</p>
-              <EventList events={todaysEvents} /> */}
               <Calendar />
             </div>
           </div>

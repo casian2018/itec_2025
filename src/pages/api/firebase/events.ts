@@ -1,3 +1,4 @@
+// /pages/api/firebase/events.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "@/pages/api/firebase/firebase";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
@@ -11,15 +12,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
 
         try {
+            // Construct dynamic video call link
+            const origin = req.headers.origin || "http://localhost:3000"; // fallback
+            const videoCallLink = `${origin}/video-call/${doc_id}`;
+
             const docRef = doc(db, "events", doc_id);
             await setDoc(docRef, {
                 date,
                 title,
                 description,
+                videoCallLink,
                 createdAt: serverTimestamp(),
             });
 
-            return res.status(200).json({ message: "Event saved successfully" });
+            return res.status(200).json({ message: "Event saved successfully", videoCallLink });
         } catch (error) {
             console.error("Error saving event:", error);
             return res.status(500).json({ error: "Failed to save the event" });
