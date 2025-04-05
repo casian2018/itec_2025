@@ -20,6 +20,8 @@
     "dropzone": "^6.0.0-beta.2",
     "firebase": "^11.6.0",
     "formidable": "^3.5.2",
+    "generative-ai": "^0.1.4",
+    "google": "^2.1.0",
     "js-cookie": "^3.0.5",
     "next": "15.2.4",
     "react": "^19.0.0",
