@@ -78,14 +78,7 @@ function Aside() {
 		<div className="bg-green-700 min-h-screen w-50 min-w-50 max-w-50 p-4 text-white flex flex-col justify-between">
 			<div>
 				<div className="flex items-center gap-3 mb-6">
-					<div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-						<div className="w-8 h-8 rounded-full overflow-hidden relative">
-							<div className="absolute font-bold text-xs flex flex-col h-full w-full">
-								<div className="h-1/2 flex items-center justify-center">0</div>
-								<div className="h-1/2 flex items-center justify-center">1</div>
-							</div>
-						</div>
-					</div>
+					<img ></img>
 					<h1 className="text-xl font-bold">Academix</h1>
 				</div>
 
