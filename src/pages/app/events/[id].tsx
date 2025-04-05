@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { doc, getDoc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
 import { db, user } from '@/pages/api/firebase/firebase';
 import { useDropzone } from 'react-dropzone';
 import Cookies from 'js-cookie';
@@ -191,7 +191,7 @@ const EventDetails: React.FC = () => {
       const eventDocRef = doc(db, 'events', id);
       await updateDoc(eventDocRef, {
         uploadedFiles: arrayRemove(fileName),
-        [`fileSummaries.${fileName}`]: firebase.firestore.FieldValue.delete()
+        [`fileSummaries.${fileName}`]: deleteField()
       });
 
       // Update local state

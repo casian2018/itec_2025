@@ -7,223 +7,197 @@ const APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
 const UID = Math.floor(Math.random() * 100000);
 
 const VideoCall = () => {
-    const router = useRouter();
-    const { id: channelName } = router.query;
+  const router = useRouter();
+  const { id: channelName } = router.query;
 
-    const [token, setToken] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [agoraClient, setAgoraClient] = useState<any>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [agoraClient, setAgoraClient] = useState<any>(null);
 
-    const [localVideoTrack, setLocalVideoTrack] = useState<any>(null);
-    const [localAudioTrack, setLocalAudioTrack] = useState<any>(null);
+  const [localVideoTrack, setLocalVideoTrack] = useState<any>(null);
+  const [localAudioTrack, setLocalAudioTrack] = useState<any>(null);
 
-    const [isCameraOn, setIsCameraOn] = useState(true);
-    const [isMicOn, setIsMicOn] = useState(true);
-    const [isHandRaised, setIsHandRaised] = useState(false);
+  const [isCameraOn, setIsCameraOn] = useState(true);
+  const [isMicOn, setIsMicOn] = useState(true);
+  const [isHandRaised, setIsHandRaised] = useState(false);
 
-    const localVideoRef = useRef<HTMLDivElement>(null);
-    const remoteVideoRef = useRef<HTMLDivElement>(null);
+  const [remoteUsers, setRemoteUsers] = useState<any[]>([]);
 
-    useEffect(() => {
-        if (!channelName) return;
+  const localVideoRef = useRef<HTMLDivElement>(null);
+  const remoteVideoRefs = useRef<HTMLDivElement[]>([]);
 
-        const fetchToken = async () => {
-            try {
-                const response = await fetch(
-                    `/api/agora/agoraToken?channelName=${channelName}&uid=${UID}`
-                );
-                if (!response.ok) throw new Error("Failed to fetch token");
-                const data = await response.json();
-                setToken(data.token);
-            } catch (error) {
-                console.error("Error fetching token:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+  useEffect(() => {
+    if (!channelName) return;
 
-        fetchToken();
-    }, [channelName]);
+    const fetchToken = async () => {
+      try {
+        const response = await fetch(
+          `/api/agora/agoraToken?channelName=${channelName}&uid=${UID}`
+        );
+        const data = await response.json();
+        setToken(data.token);
+      } catch (error) {
+        console.error("Token fetch failed:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    useEffect(() => {
-        if (!token || !channelName) return;
+    fetchToken();
+  }, [channelName]);
 
-        const initAgora = async () => {
-            const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
-            const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
-            setAgoraClient(client);
+  useEffect(() => {
+    if (!token || !channelName) return;
 
-            client.on("user-published", async (user, mediaType) => {
-                await client.subscribe(user, mediaType);
-                if (mediaType === "video" && remoteVideoRef.current) {
-                    user.videoTrack?.play(remoteVideoRef.current);
-                }
-                if (mediaType === "audio") {
-                    user.audioTrack?.play();
-                }
-            });
+    const initAgora = async () => {
+      const AgoraRTC = (await import("agora-rtc-sdk-ng")).default;
+      const client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+      setAgoraClient(client);
 
-            await client.join(APP_ID, channelName as string, token, UID);
-
-            const videoTrack = await AgoraRTC.createCameraVideoTrack();
-            const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
-
-            setLocalVideoTrack(videoTrack);
-            setLocalAudioTrack(audioTrack);
-
-            if (localVideoRef.current) {
-                videoTrack.play(localVideoRef.current);
-            }
-
-            await client.publish([videoTrack, audioTrack]);
-        };
-
-        initAgora();
-
-        return () => {
-            agoraClient?.leave();
-        };
-    }, [token, channelName]);
-
-    const toggleCamera = async () => {
-        if (localVideoTrack) {
-            if (isCameraOn) {
-                await localVideoTrack.setEnabled(false);
-            } else {
-                await localVideoTrack.setEnabled(true);
-            }
-            setIsCameraOn(!isCameraOn);
+      client.on("user-published", async (user, mediaType) => {
+        await client.subscribe(user, mediaType);
+        if (mediaType === "video") {
+          setRemoteUsers((prev) => [...prev, user]);
         }
-    };
-
-    const toggleMic = async () => {
-        if (localAudioTrack) {
-            if (isMicOn) {
-                await localAudioTrack.setEnabled(false);
-            } else {
-                await localAudioTrack.setEnabled(true);
-            }
-            setIsMicOn(!isMicOn);
+        if (mediaType === "audio") {
+          user.audioTrack?.play();
         }
+      });
+
+      client.on("user-unpublished", (user) => {
+        setRemoteUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+      });
+
+      await client.join(APP_ID, channelName as string, token, UID);
+
+      const videoTrack = await AgoraRTC.createCameraVideoTrack();
+      const audioTrack = await AgoraRTC.createMicrophoneAudioTrack();
+
+      setLocalVideoTrack(videoTrack);
+      setLocalAudioTrack(audioTrack);
+
+      if (localVideoRef.current) {
+        videoTrack.play(localVideoRef.current);
+      }
+
+      await client.publish([videoTrack, audioTrack]);
     };
 
-    const raiseHand = () => {
-        setIsHandRaised(true);
-        console.log("Hand raised");
-    };
+    initAgora();
 
-    const lowerHand = () => {
-        setIsHandRaised(false);
-        console.log("Hand lowered");
+    return () => {
+      agoraClient?.leave();
     };
+  }, [token, channelName]);
 
-    if (isLoading) {
-        return <div className="loading">Loading token...</div>;
+  useEffect(() => {
+    // Play remote videos in refs
+    remoteUsers.forEach((user, i) => {
+      if (remoteVideoRefs.current[i]) {
+        user.videoTrack?.play(remoteVideoRefs.current[i]);
+      }
+    });
+  }, [remoteUsers]);
+
+  const toggleCamera = async () => {
+    if (localVideoTrack) {
+      await localVideoTrack.setEnabled(!isCameraOn);
+      setIsCameraOn(!isCameraOn);
     }
+  };
 
+  const toggleMic = async () => {
+    if (localAudioTrack) {
+      await localAudioTrack.setEnabled(!isMicOn);
+      setIsMicOn(!isMicOn);
+    }
+  };
+
+  const raiseHand = () => {
+    setIsHandRaised(true);
+    console.log("Hand raised");
+  };
+
+  const lowerHand = () => {
+    setIsHandRaised(false);
+    console.log("Hand lowered");
+  };
+
+  if (isLoading) {
     return (
-        <div className="container">
-        <div className="video-call-container">
-            <h1 className="title">Video Call - Channel: {channelName}</h1>
-            <div className="video-container">
-                <div
-                    ref={localVideoRef}
-                    className="video-box local-video"
-                ></div>
-                <div
-                    ref={remoteVideoRef}
-                    className="video-box remote-video"
-                ></div>
-            </div>
-            <div className="controls">
-                <button className="control-button" onClick={toggleCamera}>
-                    {isCameraOn ? "Turn Off Camera" : "Turn On Camera"}
-                </button>
-                <button className="control-button" onClick={toggleMic}>
-                    {isMicOn ? "Mute Mic" : "Unmute Mic"}
-                </button>
-                <button
-                    className="control-button"
-                    onClick={raiseHand}
-                    disabled={isHandRaised}
-                >
-                    Raise Hand
-                </button>
-                <button
-                    className="control-button"
-                    onClick={lowerHand}
-                    disabled={!isHandRaised}
-                >
-                    Lower Hand
-                </button>
-            </div>
-            </div>
-            <style jsx>{`
-                .container {
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    height: 100vh;
-                    background-color: #f0f0f0;
-                }
-                .video-call-container {
-                    font-family: "Roboto", sans-serif;
-                    color: black;
-                    background: white;
-                    min-height: 100vh;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 20px;
-                }
-                .title {
-                    font-size: 2rem;
-                    margin-bottom: 20px;
-                }
-                .video-container {
-                    display: flex;
-                    gap: 20px;
-                    margin-bottom: 20px;
-                }
-                .video-box {
-                    width: 320px;
-                    height: 240px;
-                    background-color: #000;
-                    border: 2px solid green;
-                    border-radius: 10px;
-                }
-                .controls {
-                    display: flex;
-                    gap: 10px;
-                }
-                .control-button {
-                    background: green;
-                    color: #000;
-                    border: none;
-                    padding: 10px 20px;
-                    border-radius: 5px;
-                    font-size: 1rem;
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                }
-                .control-button:hover {
-                    background: red;
-                    color: #fff;
-                }
-                .control-button:disabled {
-                    background: #555;
-                    cursor: not-allowed;
-                }
-                .loading {
-                    font-size: 1.5rem;
-                    color: #00eaff;
-                    text-align: center;
-                }
-            `}</style>
-        </div>
+      <div className="flex items-center justify-center h-screen text-lg text-blue-500">
+        Loading token...
+      </div>
     );
+  }
+
+  const totalUsers = 1 + remoteUsers.length; // local + remote
+  const gridCols =
+    totalUsers === 1
+      ? "grid-cols-1"
+      : totalUsers === 2
+      ? "grid-cols-2"
+      : totalUsers <= 4
+      ? "grid-cols-2"
+      : totalUsers <= 6
+      ? "grid-cols-3"
+      : "grid-cols-4";
+
+  return (
+    <div className="flex flex-col h-screen bg-gray-100">
+      <header className="text-center py-4 shadow bg-white text-xl font-semibold">
+        Meet – Channel: {channelName}
+      </header>
+
+      {/* Video Grid */}
+      <div className={`flex-1 grid gap-4 p-4 ${gridCols}`}>
+        {/* Local video */}
+        <div
+          ref={localVideoRef}
+          className="bg-black rounded-xl shadow-lg aspect-video"
+        ></div>
+
+        {/* Remote videos */}
+        {remoteUsers.map((_, i) => (
+          <div
+            key={i}
+            ref={(el) => {
+              if (el) {
+                remoteVideoRefs.current[i] = el;
+              }
+            }}
+            className="bg-black rounded-xl shadow-lg aspect-video"
+          ></div>
+        ))}
+      </div>
+
+      {/* Controls */}
+      {/* Controls */}
+<div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-white shadow-xl rounded-full px-6 py-3 flex gap-4">
+    <button
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition"
+        onClick={toggleCamera}
+    >
+        {isCameraOn ? "Turn Off Camera" : "Turn On Camera"}
+    </button>
+    <button
+        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition"
+        onClick={toggleMic}
+    >
+        {isMicOn ? "Mute Mic" : "Unmute Mic"}
+    </button>4
+    <button
+        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition"
+        onClick={() => {
+            agoraClient?.leave(); // Leave the Agora channel
+            router.push("/dashboard"); // Redirect to /dashboard
+        }}
+    >
+        Leave
+    </button>
+</div>
+    </div>
+  );
 };
 
 export default dynamic(() => Promise.resolve(VideoCall), { ssr: false });
