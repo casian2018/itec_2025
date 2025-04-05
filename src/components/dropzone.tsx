@@ -1,72 +1,35 @@
-import React, { useState, useCallback } from 'react';
+// /components/Dropzone.tsx
+import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 interface DropzoneProps {
-    onFilesAdded: (files: File[]) => void;
+  onFilesAdded: (files: File[]) => void;
 }
 
 const Dropzone: React.FC<DropzoneProps> = ({ onFilesAdded }) => {
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        onFilesAdded(acceptedFiles);
-    }, [onFilesAdded]);
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    onFilesAdded(acceptedFiles);
+  }, [onFilesAdded]);
 
-    const { getRootProps, getInputProps } = useDropzone({
-        onDrop,
-        accept: {
-            'image/*': ['.jpeg', '.png'], // Accept only JPEG and PNG images
-        },
-    });
+  const { getRootProps, getInputProps } = useDropzone({
+    onDrop,
+    accept: { 'image/*': ['.jpeg', '.png'], 'application/pdf': ['.pdf'] },
+  });
 
-    return (
-        <div {...getRootProps()} style={dropzoneStyle}>
-            <input {...getInputProps()} />
-            <p>Drag & drop some files here, or click to select files</p>
-        </div>
-    );
+  return (
+    <div {...getRootProps()} style={dropzoneStyle}>
+      <input {...getInputProps()} />
+      <p>📁 Drag & drop files, or click to select</p>
+    </div>
+  );
 };
 
 const dropzoneStyle: React.CSSProperties = {
-    border: '2px dashed #cccccc',
-    borderRadius: '4px',
-    padding: '20px',
-    textAlign: 'center',
-    cursor: 'pointer',
+  border: '2px dashed #999',
+  borderRadius: '8px',
+  padding: '20px',
+  textAlign: 'center',
+  cursor: 'pointer',
 };
 
-const Home: React.FC = () => {
-    const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-
-    const handleFilesAdded = async (files: File[]) => {
-        setUploadedFiles((prevFiles) => [...prevFiles, ...files]);
-    
-        const formData = new FormData();
-        files.forEach((file) => {
-            formData.append('file', file);
-        });
-    
-        const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-        });
-    
-        if (response.ok) {
-            console.log('Files uploaded successfully');
-        } else {
-            console.error('Error uploading files');
-        }
-    };
-
-    return (
-        <div>
-            <h1>Upload Files</h1>
-            <Dropzone onFilesAdded={handleFilesAdded} />
-            <div>
-                {uploadedFiles.map((file, index) => (
-                    <div key={index}>{file.name}</div>
-                ))}
-            </div>
-        </div>
-    );
-};
-
-export default Home;
+export default Dropzone;

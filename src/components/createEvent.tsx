@@ -1,170 +1,175 @@
+// components/CreateEvent.tsx
 import React, { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 
 interface CreateEventProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onSave: (eventData: {
-        date: string;
-        title: string;
-        description: string;
-        doc_id: string;
-    }) => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (eventData: Record<string, any>) => void;
 }
 
 const CreateEvent: React.FC<CreateEventProps> = ({
-    isOpen,
-    onClose,
-    onSave,
+  isOpen,
+  onClose,
+  onSave,
 }) => {
-    const [date, setDate] = useState("");
-    const [title, setTitle] = useState("");
-    const [description, setDescription] = useState("");
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    organizerName: "",
+    organizerEmail: "",
+    startDate: "",
+    endDate: "",
+  });
 
-    const handleSave = async () => {
-        if (date && title && description) {
-            const doc_id = title.replace(/\s+/g, "_").toLowerCase(); // Generate doc_id from the title
-            const eventData = {
-                doc_id,
-                date,
-                title,
-                description,
-            };
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-            try {
-                // Send the event data to the database via an API call
-                const response = await fetch("/api/firebase/events", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(eventData),
-                });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-                if (!response.ok) {
-                    throw new Error("Failed to save the event");
-                }
+    const doc_id = uuidv4();
 
-                // Call the onSave callback to update the parent component
-                onSave(eventData);
-
-                // Reset the form fields
-                setDate("");
-                setTitle("");
-                setDescription("");
-
-                // Close the modal
-                onClose();
-            } catch (error) {
-                console.error("Error saving event:", error);
-                alert("An error occurred while saving the event. Please try again.");
-            }
-        } else {
-            alert("Please fill in all fields.");
-        }
+    const payload = {
+      doc_id,
+      date: formData.startDate, // Using startDate as the main event date
+      title: formData.title,
+      description: formData.description,
     };
 
-    if (!isOpen) return null;
+    try {
+      const response = await fetch("/api/firebase/events", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    return (
-        <div
-        className={`
-          fixed inset-0 z-50 flex items-center justify-center
-          bg-black/50 backdrop-blur-sm transition-opacity duration-300
-          ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"}
-        `}
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Server response:", errorData);
+        alert(`Error: ${errorData.message || "Failed to save the event"}`);
+        throw new Error("Failed to save the event");
+      }
+
+      onSave(formData);
+      setFormData({
+        title: "",
+        description: "",
+        organizerName: "",
+        organizerEmail: "",
+        startDate: "",
+        endDate: "",
+      });
+      onClose();
+    } catch (error) {
+      console.error("Error saving event:", error);
+      alert("An error occurred while saving the event. Please try again.");
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 relative"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className={`
-            bg-white rounded-2xl shadow-2xl p-6 w-full max-w-xl
-            transition-transform duration-300 transform
-            ${isOpen ? "scale-100" : "scale-95"}
-          `}
-          style={{ maxHeight: "80vh", overflowY: "auto" }}
-          role="dialog"
-          aria-modal="true"
+        <button
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          onClick={onClose}
         >
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Create Event</h2>
+          ✕
+        </button>
+        <h1 className="text-3xl font-bold text-[black] mb-6">Create Event</h1>
+        <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
+          <div className="p-2">
+            <input
+              type="text"
+              id="title"
+              name="title"
+              placeholder="Event Title"
+              value={formData.title}
+              onChange={handleChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
+              style={{ backgroundColor: "#f6f6f6" }}
+            />
+          </div>
+          <div className="p-2">
+            <textarea
+              id="description"
+              name="description"
+              rows={3}
+              placeholder="Event Description"
+              value={formData.description}
+              onChange={handleChange}
+              className="block w-full h-48 rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
+              style={{ backgroundColor: "#f6f6f6" }}
+            />
+          </div>
+          <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <input
+              type="text"
+              id="organizer-name"
+              name="organizerName"
+              placeholder="Organizer Name"
+              value={formData.organizerName}
+              onChange={handleChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
+              style={{ backgroundColor: "#f6f6f6" }}
+            />
+            <input
+              type="email"
+              id="organizer-email"
+              name="organizerEmail"
+              placeholder="Organizer Email"
+              value={formData.organizerEmail}
+              onChange={handleChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
+              style={{ backgroundColor: "#f6f6f6" }}
+            />
+          </div>
+          <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <input
+              type="datetime-local"
+              id="start-date"
+              name="startDate"
+              value={formData.startDate}
+              onChange={handleChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
+              style={{ backgroundColor: "#f6f6f6" }}
+            />
+            <input
+              type="datetime-local"
+              id="end-date"
+              name="endDate"
+              value={formData.endDate}
+              onChange={handleChange}
+              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
+              style={{ backgroundColor: "#f6f6f6" }}
+            />
+          </div>
+          <div className="col-span-full mt-6 p-2">
             <button
-              type="button"
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-full"
-              aria-label="Close modal"
+              type="submit"
+              className="block w-full bg-[#8c0327] hover:bg-[#6b0220] text-white font-bold py-3 px-4 rounded-full"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-6 h-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              Register for Event
             </button>
           </div>
-      
-          <form className="space-y-4">
-            <div>
-              <label htmlFor="date" className="block text-sm font-medium text-gray-700">
-                Date
-              </label>
-              <input
-                type="date"
-                id="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-              />
-            </div>
-      
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                type="text"
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-              />
-            </div>
-      
-            <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                Description
-              </label>
-              <textarea
-                id="description"
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"
-              />
-            </div>
-      
-            <div className="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                Save
-              </button>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+        </form>
       </div>
-      
-    );
+    </div>
+  );
 };
 
 export default CreateEvent;

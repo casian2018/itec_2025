@@ -1,4 +1,5 @@
 import React from 'react';
+import Aside from '@/components/Aside';
 
 interface Event {
   id: string;
@@ -13,30 +14,43 @@ interface EventListProps {
 
 const EventList: React.FC<EventListProps> = ({ events }) => {
   if (!events || events.length === 0) {
-    return <div className="mt-6 text-gray-600">No events for this date.</div>;
+    return (
+      <div className="mt-6 text-gray-500 text-center">
+        No events for this date.
+      </div>
+    );
   }
 
   return (
+    <>
     <div className="mt-8 w-full">
-      <h1 className="text-2xl font-bold mb-4 text-gray-800">Events</h1>
-      <div className="flex overflow-x-auto space-x-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <h1 className="text-4xl font-bold mb-8 text-center text-gray-800">
+        Upcoming Events
+      </h1>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {events.map((event) => (
           <div
             key={event.id}
             onClick={() => (window.location.href = `/app/events/${event.id}`)}
-            className="min-w-[320px] bg-gradient-to-r from-white to-gray-50 shadow-lg rounded-xl p-6 border border-gray-300 hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+            className="bg-white shadow-md rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-transform transform hover:scale-105 cursor-pointer"
           >
-            <h2 className="text-xl font-bold text-gray-900">{event.title}</h2>
-            <p className="text-sm text-gray-600 italic">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              {event.title}
+            </h2>
+            <p className="text-sm text-gray-500 mb-4">
               {new Date(event.date).toLocaleDateString()}
             </p>
-            <p className="mt-4 text-gray-700 leading-relaxed">
+            <p className="text-gray-700 leading-relaxed line-clamp-3">
               {event.description}
             </p>
+            <button className="mt-4 bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition-colors">
+              View Details
+            </button>
           </div>
         ))}
       </div>
     </div>
+    </>
   );
 };
 

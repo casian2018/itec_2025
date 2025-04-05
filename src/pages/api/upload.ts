@@ -1,39 +1,35 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import formidable from 'formidable';
-import fs from 'fs';
+import { IncomingForm } from 'formidable';
 import path from 'path';
+import fs from 'fs';
 
 export const config = {
   api: {
-    bodyParser: false, // Disallow body parsing, since we're using formidable
+    bodyParser: false,
   },
 };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method === 'POST') {
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+export default function handler(req: any, res: any) {
+  const uploadDir = path.join(process.cwd(), 'public/uploads');
 
-    // Ensure the upload directory exists
+  if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
-
-    const form = formidable({
-      uploadDir: uploadDir,
-      keepExtensions: true,
-    });
-
-    form.parse(req, (err, fields, files) => {
-      if (err) {
-        res.status(500).json({ error: 'Error parsing the files' });
-        return;
-      }
-
-      // Here you can move the files to a permanent location or process them as needed
-      res.status(200).json({ fields, files });
-    });
-  } else {
-    res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const form = new IncomingForm({
+    uploadDir,
+    keepExtensions: true,
+    multiples: true,
+  });
+
+  form.parse(req, (err, fields, files) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    const uploaded = Array.isArray(files.file) ? files.file : [files.file];
+    const fileList = uploaded.map((f) => ({
+      originalFilename: f.originalFilename,
+      newFilename: path.basename(f.filepath),
+    }));
+
+    res.status(200).json({ files: fileList });
+  });
 }
