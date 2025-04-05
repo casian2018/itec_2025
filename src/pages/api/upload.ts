@@ -26,8 +26,8 @@ export default function handler(req: any, res: any) {
 
     const uploaded = Array.isArray(files.file) ? files.file : [files.file];
     const fileList = uploaded.map((f) => ({
-      originalFilename: f.originalFilename,
-      newFilename: path.basename(f.filepath),
+      originalFilename: f?.originalFilename ?? 'unknown',
+      newFilename: path.basename(f?.filepath ?? ''),
     }));
 
     res.status(200).json({ files: fileList });

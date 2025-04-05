@@ -12,6 +12,17 @@ interface Event {
   description: string;
 }
 
+interface CreateEventProps {
+
+  isOpen: boolean;
+
+  onClose: () => void;
+
+  onSave: (eventData: { date: string; title: string; description: string }) => void;
+
+}
+
+
 export default function Dashboard() {
   const [isCreateEventOpen, setIsCreateEventOpen] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
@@ -25,7 +36,7 @@ export default function Dashboard() {
     setIsCreateEventOpen(false);
   };
 
-  const handleSaveEvent = (eventData: { date: string; title: string; description: string }) => {
+  const handleSaveEvent = (eventData: Record<string, any>) => {
     console.log("Event saved:", eventData);
     setIsCreateEventOpen(false);
     // You can optionally re-fetch events here
