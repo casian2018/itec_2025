@@ -28,6 +28,12 @@ const Profile = () => {
       <h1 className="text-2xl font-bold mb-4">Profile</h1>
       <p><span className="font-semibold">Username:</span> {username}</p>
       <p><span className="font-semibold">Email:</span> {email}</p>
+      {currentUser?.photoURL && (
+        <img
+          src={currentUser.photoURL}  // Display user's profile picture if available  
+        />
+      )}
+      <p className="mt-4">Welcome to your profile!</p>
     </div>
   );
 };
