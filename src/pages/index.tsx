@@ -152,7 +152,7 @@ export default function Home() {
   <div className="w-full max-w-screen-xl mx-auto p-6 text-center">
     <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
       <span className="text-sm text-white">
-        © 2025 <span className=" hover:text-red-400 cursor-pointer">Academix™</span>. All Rights Reserved.
+        © 2025 <span className=" hover:text-green-400 cursor-pointer">Academix™</span>. All Rights Reserved.
       </span>
 
       <div className="flex space-x-6 text-sm text-gray-300">
