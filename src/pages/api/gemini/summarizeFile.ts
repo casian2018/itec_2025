@@ -84,6 +84,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     // Prepare the prompt for summarization
     const prompt = `Please provide a comprehensive but concise summary of the following content. 
     Focus on key points, main ideas, and important details. 
+    Be concise and avoid unnecessary elaboration.
+    Limit the summary to 5-10 sentences if possible.
     Format the summary in clear sections with bullet points where appropriate:
     
     ${fileContent}`;

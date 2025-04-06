@@ -8,6 +8,7 @@ import { useDropzone } from 'react-dropzone';
 import Cookies from 'js-cookie';
 import Aside from '@/components/Aside';
 import firebase from 'firebase/compat/app';
+import TextToSpeech from '@/components/TextToSpeech';
 
 interface Event {
   id: string;
@@ -33,6 +34,7 @@ const EventDetails: React.FC = () => {
   const [removingFile, setRemovingFile] = useState<string | null>(null);
   const [fileSummaries, setFileSummaries] = useState<Record<string, string>>({});
   const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
+  const [selectedSummary, setSelectedSummary] = useState<string>('');
 
   const userId = Cookies.get('email') || '';
   const userName = Cookies.get('name') || '';
@@ -83,17 +85,29 @@ const EventDetails: React.FC = () => {
         attendees: arrayUnion(userId),
       });
 
-      await updateDoc(doc(db, 'users', userUid), {
+      // Get current user document to check existing points
+      const userDocRef = doc(db, 'users', userUid);
+      const userDoc = await getDoc(userDocRef);
+      
+      // Calculate new points (add 2 to existing points or start at 2 if no points field exists)
+      // Use parseInt to ensure we're dealing with numbers, not strings
+      const currentPoints = userDoc.exists() ? parseInt(userDoc.data().points || 0, 10) : 0;
+      const newPoints = currentPoints + 2;
+      
+      // Update user document with new event attendance and points
+      await updateDoc(userDocRef, {
         events_attended: arrayUnion({
           eventId: id,
           eventTitle: event.title,
           eventDate: event.date,
           attendedAt: new Date().toISOString(),
         }),
+        points: newPoints // Save as proper integer in the database
       });
 
       setAttending(true);
-      alert('You are now attending this event!');
+      
+      alert(`You are now attending this event! You earned 2 points. Total: ${newPoints} points.`);
     } catch (err) {
       console.error('Error attending event:', err);
     }
@@ -215,6 +229,13 @@ const EventDetails: React.FC = () => {
       'application/pdf': ['.pdf'],
     },
   });
+
+  // Function to handle setting the selected summary for text-to-speech
+  const handleSelectSummaryForSpeech = (summary: string) => {
+    // Remove HTML tags from the summary before sending it to the text-to-speech component
+    const cleanSummary = summary.replace(/<[^>]*>?/gm, '');
+    setSelectedSummary(cleanSummary);
+  };
 
   if (loading) {
     return (
@@ -429,6 +450,12 @@ const EventDetails: React.FC = () => {
                             className="prose prose-sm max-w-none text-gray-700"
                             dangerouslySetInnerHTML={{ __html: fileSummaries[name] }}
                           />
+                          <button 
+                            onClick={() => handleSelectSummaryForSpeech(fileSummaries[name])}
+                            className="mt-2 text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                          >
+                            Listen to Summary
+                          </button>
                         </div>
                       ) : !summarizing[name] ? (
                         <div className="p-4 text-center text-gray-500">
@@ -447,6 +474,7 @@ const EventDetails: React.FC = () => {
                   No files uploaded yet
                 </div>
               )}
+              <TextToSpeech initialText={selectedSummary} autoPlay={selectedSummary !== ''} />
             </div>
           </div>
         </div>
