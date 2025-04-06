@@ -92,7 +92,7 @@ const EventDetails: React.FC = () => {
       // Calculate new points (add 2 to existing points or start at 2 if no points field exists)
       // Use parseInt to ensure we're dealing with numbers, not strings
       const currentPoints = userDoc.exists() ? parseInt(userDoc.data().points || 0, 10) : 0;
-      const newPoints = currentPoints + 2;
+      const newPoints = currentPoints + 500;
       
       // Update user document with new event attendance and points
       await updateDoc(userDocRef, {
