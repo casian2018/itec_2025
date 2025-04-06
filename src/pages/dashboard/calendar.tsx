@@ -1,17 +1,50 @@
 import React, { useState, useEffect, useRef } from "react";
 import Calendar from "@/components/calendar";
+import MyCalendar from "@/components/myCalendar";
+import CalendarWeek from "@/components/calendarWeek";
 import Aside from "@/components/Aside";
 import { ChevronDownIcon, CalendarIcon, FilterIcon, PlusIcon } from '@heroicons/react/outline';
+import Cookies from "js-cookie"; // Import js-cookie
+import { db } from "@/pages/api/firebase/firebase"; // Import your Firebase configuration
+import { doc, getDoc } from "firebase/firestore"; // Firestore methods
 
 const CalendarPage: React.FC = () => {
   const [view, setView] = useState<'month' | 'week' | 'agenda'>('month');
   const [filter, setFilter] = useState<string>('all');
   const [filterOpen, setFilterOpen] = useState(false);
   const [yearFilterOpen, setYearFilterOpen] = useState(false);
-  const [academicYear, setAcademicYear] = useState('2023-2024');
+  const [academicYear, setAcademicYear] = useState('2024-2025');
+  const [events, setEvents] = useState<any[]>([]); // State to store events
 
   const filterRef = useRef<HTMLDivElement>(null);
   const yearFilterRef = useRef<HTMLDivElement>(null);
+
+  // Fetch events for the logged-in user
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const uid = Cookies.get("uid"); // Get user UID from cookies
+        if (!uid) {
+          console.error("User UID not found in cookies");
+          return;
+        }
+
+        const userDocRef = doc(db, "users", uid); // Reference to the user document
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setEvents(userData.events || []); // Assuming events are stored in the `events` field
+        } else {
+          console.error("User document not found");
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -99,7 +132,7 @@ const CalendarPage: React.FC = () => {
                 {/* Filter Dropdown */}
                 {filterOpen && (
                   <div className="absolute z-10 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 animate-slideDown">
-                    {['all', 'classes', 'meetings', 'deadlines', 'exams'].map(option => (
+                    {['all'].map(option => (
                       <button
                         key={option}
                         className={`block px-4 py-2 text-sm w-full text-left hover:bg-green-50 ${filter === option ? 'bg-green-100 text-green-800 font-medium' : 'text-gray-700'}`}
@@ -166,63 +199,13 @@ const CalendarPage: React.FC = () => {
                   </svg>
                 </button>
               </div>
-
-              <span className="text-white bg-green-600 rounded-lg px-4 py-1 text-sm font-medium shadow-sm">
-                September 2023
-              </span>
             </div>
           </div>
 
           <div className="p-6">
-            <Calendar />
-          </div>
-        </div>
-
-        {/* Quick Info Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-600 hover:shadow-lg transition-shadow">
-            <div className="flex justify-between items-start">
-              <h3 className="font-medium text-green-800 mb-2">Upcoming Deadlines</h3>
-              <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-medium">3</span>
-            </div>
-            <p className="text-gray-600 text-sm">Next: Research paper due in 5 days</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-amber-500 hover:shadow-lg transition-shadow">
-            <div className="flex justify-between items-start">
-              <h3 className="font-medium text-green-800 mb-2">Important Dates</h3>
-              <span className="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full font-medium">1</span>
-            </div>
-            <p className="text-gray-600 text-sm">Final exams begin October 14</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-500 hover:shadow-lg transition-shadow">
-            <div className="flex justify-between items-start">
-              <h3 className="font-medium text-green-800 mb-2">Office Hours</h3>
-              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">2</span>
-            </div>
-            <p className="text-gray-600 text-sm">Professor Smith: Tomorrow, 2-4 PM</p>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-500 hover:shadow-lg transition-shadow">
-            <h3 className="font-medium text-green-800 mb-2">Academic Progress</h3>
-            <div className="mt-2 relative pt-1">
-              <div className="flex mb-2 items-center justify-between">
-                <div>
-                  <span className="text-xs font-semibold inline-block text-purple-600">
-                    Fall Semester
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs font-semibold inline-block text-purple-600">
-                    75%
-                  </span>
-                </div>
-              </div>
-              <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-purple-100">
-                <div style={{ width: "75%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500"></div>
-              </div>
-            </div>
+            {view === 'month' && <Calendar  />}
+            {view === 'week' && <CalendarWeek />}
+            {view === 'agenda' && <MyCalendar />}
           </div>
         </div>
       </div>
