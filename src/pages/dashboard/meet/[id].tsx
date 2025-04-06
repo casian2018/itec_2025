@@ -2,6 +2,13 @@
 import { useRouter } from "next/router";
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
+import { db } from "@/pages/api/firebase/firebase";
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+} from "firebase/firestore";
 
 const APP_ID = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
 const UID = Math.floor(Math.random() * 100000);
@@ -19,13 +26,17 @@ const VideoCall = () => {
 
   const [isCameraOn, setIsCameraOn] = useState(true);
   const [isMicOn, setIsMicOn] = useState(true);
-  const [isHandRaised, setIsHandRaised] = useState(false);
 
   const [remoteUsers, setRemoteUsers] = useState<any[]>([]);
 
   const localVideoRef = useRef<HTMLDivElement>(null);
   const remoteVideoRefs = useRef<HTMLDivElement[]>([]);
 
+  // Chat state
+  const [chatInput, setChatInput] = useState("");
+  const [messages, setMessages] = useState<{ text: string }[]>([]);
+
+  // Fetch token
   useEffect(() => {
     if (!channelName) return;
 
@@ -46,6 +57,7 @@ const VideoCall = () => {
     fetchToken();
   }, [channelName]);
 
+  // Init Agora
   useEffect(() => {
     if (!token || !channelName) return;
 
@@ -90,14 +102,29 @@ const VideoCall = () => {
     };
   }, [token, channelName]);
 
+  // Play remote videos
   useEffect(() => {
-    // Play remote videos in refs
     remoteUsers.forEach((user, i) => {
       if (remoteVideoRefs.current[i]) {
         user.videoTrack?.play(remoteVideoRefs.current[i]);
       }
     });
   }, [remoteUsers]);
+
+  // Chat real-time listener
+  useEffect(() => {
+    if (!channelName) return;
+
+    const messagesRef = collection(db, "chats", channelName as string, "messages");
+    const q = query(messagesRef, orderBy("timestamp", "asc"));
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const msgs = snapshot.docs.map((doc) => doc.data() as { text: string });
+      setMessages(msgs);
+    });
+
+    return () => unsubscribe();
+  }, [channelName]);
 
   const toggleCamera = async () => {
     if (localVideoTrack) {
@@ -113,14 +140,21 @@ const VideoCall = () => {
     }
   };
 
-  const raiseHand = () => {
-    setIsHandRaised(true);
-    console.log("Hand raised");
-  };
+  const sendMessage = async () => {
+    if (!chatInput.trim()) return;
 
-  const lowerHand = () => {
-    setIsHandRaised(false);
-    console.log("Hand lowered");
+    await fetch("/api/sendMessage", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: chatInput,
+        channelName,
+      }),
+    });
+
+    setChatInput("");
   };
 
   if (isLoading) {
@@ -131,7 +165,7 @@ const VideoCall = () => {
     );
   }
 
-  const totalUsers = 1 + remoteUsers.length; // local + remote
+  const totalUsers = 1 + remoteUsers.length;
   const gridCols =
     totalUsers === 1
       ? "grid-cols-1"
@@ -151,20 +185,16 @@ const VideoCall = () => {
 
       {/* Video Grid */}
       <div className={`flex-1 grid gap-4 p-4 ${gridCols}`}>
-        {/* Local video */}
         <div
           ref={localVideoRef}
           className="bg-black rounded-xl shadow-lg aspect-video"
         ></div>
 
-        {/* Remote videos */}
         {remoteUsers.map((_, i) => (
           <div
             key={i}
             ref={(el) => {
-              if (el) {
-                remoteVideoRefs.current[i] = el;
-              }
+              if (el) remoteVideoRefs.current[i] = el;
             }}
             className="bg-black rounded-xl shadow-lg aspect-video"
           ></div>
@@ -172,30 +202,55 @@ const VideoCall = () => {
       </div>
 
       {/* Controls */}
-      {/* Controls */}
-<div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-white shadow-xl rounded-full px-6 py-3 flex gap-4">
-    <button
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition"
-        onClick={toggleCamera}
-    >
-        {isCameraOn ? "Turn Off Camera" : "Turn On Camera"}
-    </button>
-    <button
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition"
-        onClick={toggleMic}
-    >
-        {isMicOn ? "Mute Mic" : "Unmute Mic"}
-    </button>4
-    <button
-        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition"
-        onClick={() => {
-            agoraClient?.leave(); // Leave the Agora channel
-            router.push("/dashboard"); // Redirect to /dashboard
-        }}
-    >
-        Leave
-    </button>
-</div>
+      <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-white shadow-xl rounded-full px-6 py-3 flex gap-4">
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition"
+          onClick={toggleCamera}
+        >
+          {isCameraOn ? "Turn Off Camera" : "Turn On Camera"}
+        </button>
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition"
+          onClick={toggleMic}
+        >
+          {isMicOn ? "Mute Mic" : "Unmute Mic"}
+        </button>
+        <button
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition"
+          onClick={() => {
+            agoraClient?.leave();
+            router.push("/dashboard");
+          }}
+        >
+          Leave
+        </button>
+      </div>
+
+      {/* Chat Box */}
+      <div className="fixed bottom-28 right-5 w-80 max-h-[60vh] bg-white rounded-xl shadow-lg flex flex-col">
+        <div className="bg-blue-600 text-white font-semibold p-3 rounded-t-xl">Event Chat</div>
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {messages.map((msg, i) => (
+            <div key={i} className="bg-gray-200 p-2 rounded text-sm">{msg.text}</div>
+          ))}
+        </div>
+        <div className="flex border-t p-2">
+          <input
+            type="text"
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder="Type a message..."
+            className="flex-1 px-3 py-1 text-sm border rounded-l-md outline-none"
+          />
+          <button
+            onClick={sendMessage}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-r-md"
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -81,30 +81,30 @@ const EventList: React.FC<EventListProps> = ({ events }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
       {events.map((event) => (
-        <div
-          key={event.id}
-          onClick={() => (window.location.href = `/app/events/${event.id}`)}
-          className="bg-white border border-gray-200 rounded-xl shadow hover:shadow-lg transition-transform transform hover:scale-105 cursor-pointer p-6 w-full max-w-md h-[300px] flex flex-col justify-between"
-        >
-          <div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h2>
-            <p className="text-sm text-gray-500 mb-2">
-              {new Date(event.date).toLocaleDateString(undefined, {
-                weekday: "long",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </p>
-            <p className="text-gray-700 line-clamp-3">
-              {event.description}
-            </p>
-          </div>
-
-          <button className="mt-4 bg-green-600 text-white py-2 px-4 rounded-full hover:bg-green-700 transition-colors self-start">
-            View Details
-          </button>
+      <a
+        key={event.id}
+        href={`/app/events/${event.id}`}
+        className="bg-white border border-gray-200 rounded-xl shadow hover:shadow-lg transition-transform transform hover:scale-105 cursor-pointer p-6 w-full max-w-md h-[300px] flex flex-col justify-between"
+      >
+        <div>
+        <h2 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h2>
+        <p className="text-sm text-gray-500 mb-2">
+          {new Date(event.date).toLocaleDateString(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          })}
+        </p>
+        <p className="text-gray-700 line-clamp-3">
+          {event.description}
+        </p>
         </div>
+
+        <button className="mt-4 bg-green-600 text-white py-2 px-4 rounded-full hover:bg-green-700 transition-colors self-start">
+        View Details
+        </button>
+      </a>
       ))}
     </div>
   );

@@ -64,6 +64,15 @@ function Aside() {
 				</svg>
 			),
 		},
+		{
+			label: "Store",
+			href: "/dashboard/store",
+			icon: (
+				<svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 0V4m0 8v8m4-4H8" />
+				</svg>
+			),
+		},
 	];
 	const logoutItem = {
 		label: "Ieși din cont",
