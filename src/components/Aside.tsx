@@ -75,11 +75,11 @@ function Aside() {
 		),
 	};
 	return (
-		<div className="bg-green-700 min-h-screen w-50 min-w-50 max-w-50 p-4 text-white flex flex-col justify-between">
+		<div className="bg-green-700 min-h-screen w-50 min-w-50 max-w-50 p-4 text-white flex flex-col justify-between fixed">
 			<div>
-				<div className="flex items-center gap-3 mb-6">
+				<div className="flex items-center justify-center gap-3 mb-6">
 					<img ></img>
-					<h1 className="text-xl font-bold">Academix</h1>
+					<h1 className="text-3xl font-bold">Academix</h1>
 				</div>
 
 				<nav className="flex flex-col gap-2">
