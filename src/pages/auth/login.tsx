@@ -1,7 +1,7 @@
 import React, { useState, FormEvent, JSX } from "react";
 import { auth } from "@/pages/api/firebase/firebase";
 import { signInWithEmailAndPassword, AuthError } from "firebase/auth";
-import { signInWithGoogle } from "./handleSignIn";
+import signInWithGoogle from "./handleSignIn";
 import { useRouter } from "next/router";
 import Cookies from "js-cookie";
 
