@@ -167,13 +167,7 @@ const EventDetails: React.FC = () => {
       
       // Update local state
       setFileSummaries(prev => ({ ...prev, [filename]: data.summary }));
-      
-      // Update in Firestore
-      const eventDocRef = doc(db, 'events', id);
-      await updateDoc(eventDocRef, {
-        [`fileSummaries.${filename}`]: data.summary
-      });
-      
+     
     } catch (error: any) {
       console.error('Error summarizing file:', error);
     } finally {
@@ -319,7 +313,7 @@ const EventDetails: React.FC = () => {
               {/* Join Meeting Button - Only visible when attending */}
               {attending && event.videoCallLink && (
                 <button
-                  onClick={() => router.push(event.videoCallLink)}
+                  onClick={() => router.push(event.videoCallLink as string)}
                   className="mt-4 px-6 py-3 rounded-lg font-medium text-center bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center justify-center"
                 >
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
