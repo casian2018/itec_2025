@@ -132,7 +132,7 @@ const Calendar: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex flex-col lg:flex-row gap-8">
+    <div className=" bg-gradient-to-br from-gray-50 to-gray-100 p-6 flex flex-col lg:flex-row gap-8">
       {/* Calendar Section - Fixed size */}
       <div className="w-full lg:w-1/2 h-auto">
         <div className="bg-white min-h-[500px] rounded-xl shadow-lg p-6 border border-gray-100">

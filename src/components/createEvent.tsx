@@ -77,96 +77,125 @@ const CreateEvent: React.FC<CreateEventProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-md animate-fadeIn"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 relative"
+        className="bg-white/95 backdrop-blur-sm rounded-xl shadow-xl w-full max-w-3xl overflow-hidden animate-scaleIn"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-          onClick={onClose}
-        >
-          ✕
-        </button>
-        <h1 className="text-3xl font-bold text-[black] mb-6">Create Event</h1>
-        <form className="grid grid-cols-1 gap-6" onSubmit={handleSubmit}>
-          <div className="p-2">
-            <input
-              type="text"
-              id="title"
-              name="title"
-              placeholder="Event Title"
-              value={formData.title}
-              onChange={handleChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
-              style={{ backgroundColor: "#f6f6f6" }}
-            />
-          </div>
-          <div className="p-2">
-            <textarea
-              id="description"
-              name="description"
-              rows={3}
-              placeholder="Event Description"
-              value={formData.description}
-              onChange={handleChange}
-              className="block w-full h-48 rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
-              style={{ backgroundColor: "#f6f6f6" }}
-            />
-          </div>
-          <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input
-              type="text"
-              id="organizer-name"
-              name="organizerName"
-              placeholder="Organizer Name"
-              value={formData.organizerName}
-              onChange={handleChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
-              style={{ backgroundColor: "#f6f6f6" }}
-            />
-            <input
-              type="email"
-              id="organizer-email"
-              name="organizerEmail"
-              placeholder="Organizer Email"
-              value={formData.organizerEmail}
-              onChange={handleChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
-              style={{ backgroundColor: "#f6f6f6" }}
-            />
-          </div>
-          <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input
-              type="datetime-local"
-              id="start-date"
-              name="startDate"
-              value={formData.startDate}
-              onChange={handleChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
-              style={{ backgroundColor: "#f6f6f6" }}
-            />
-            <input
-              type="datetime-local"
-              id="end-date"
-              name="endDate"
-              value={formData.endDate}
-              onChange={handleChange}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#8c0327] focus:ring-[#8c0327] focus:ring-opacity-50 p-2"
-              style={{ backgroundColor: "#f6f6f6" }}
-            />
-          </div>
-          <div className="col-span-full mt-6 p-2">
-            <button
-              type="submit"
-              className="block w-full bg-[#8c0327] hover:bg-[#6b0220] text-white font-bold py-3 px-4 rounded-full"
-            >
-              Register for Event
-            </button>
-          </div>
-        </form>
+        {/* Header with gradient to match other components */}
+        <div className="bg-gradient-to-r from-green-800 to-green-700 py-4 px-6 flex justify-between items-center">
+          <h2 className="text-xl text-white font-serif">Create New Event</h2>
+          <button
+            className="text-green-100 hover:text-white transition-colors"
+            onClick={onClose}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="p-6">
+          <form className="grid grid-cols-1 gap-5" onSubmit={handleSubmit}>
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                placeholder="Enter event title"
+                value={formData.title}
+                onChange={handleChange}
+                className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 px-4 py-2.5"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                id="description"
+                name="description"
+                rows={4}
+                placeholder="Describe your event"
+                value={formData.description}
+                onChange={handleChange}
+                className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 px-4 py-2.5"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="organizer-name" className="block text-sm font-medium text-gray-700 mb-1">Organizer Name</label>
+                <input
+                  type="text"
+                  id="organizer-name"
+                  name="organizerName"
+                  placeholder="Enter organizer name"
+                  value={formData.organizerName}
+                  onChange={handleChange}
+                  className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 px-4 py-2.5"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="organizer-email" className="block text-sm font-medium text-gray-700 mb-1">Organizer Email</label>
+                <input
+                  type="email"
+                  id="organizer-email"
+                  name="organizerEmail"
+                  placeholder="Enter organizer email"
+                  value={formData.organizerEmail}
+                  onChange={handleChange}
+                  className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 px-4 py-2.5"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="start-date" className="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
+                <input
+                  type="datetime-local"
+                  id="start-date"
+                  name="startDate"
+                  value={formData.startDate}
+                  onChange={handleChange}
+                  className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 px-4 py-2.5"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="end-date" className="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
+                <input
+                  type="datetime-local"
+                  id="end-date"
+                  name="endDate"
+                  value={formData.endDate}
+                  onChange={handleChange}
+                  className="block w-full rounded-lg border border-gray-300 shadow-sm focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 px-4 py-2.5"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4 flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-5 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+              >
+                Create Event
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
