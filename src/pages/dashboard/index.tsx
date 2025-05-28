@@ -26,8 +26,10 @@ const Dashboard = () => {
   const [email, setEmail] = useState<string>("");
   const [showAllEvents, setShowAllEvents] = useState<boolean>(false);
   const router = useRouter();
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString()
+  .split('.')[0];
   const [events, setEvents] = useState<Event[]>([]);
+        console.log(today);
 
   useEffect(() => {
     const authenticate = async () => {
@@ -53,7 +55,8 @@ const Dashboard = () => {
           id: doc.id,
           ...doc.data()
         })) as Event[];
-        setEvents(eventsList);
+        setEvents(eventsList.filter(event => new Date(event.date) >= new Date(today)));
+        console.log("Fetched events:", eventsList);
       } catch (error) {
         console.error("Error fetching events:", error);
       }
@@ -66,6 +69,8 @@ const Dashboard = () => {
     if (events.length <= 4 || showAllEvents) {
       return events;
     }
+    // return events.filter(event => event.date >= today).slice(0, 4);
+
     return events.slice(0, 4);
   };
 

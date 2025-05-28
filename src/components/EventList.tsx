@@ -84,7 +84,7 @@ const EventList: React.FC<EventListProps> = ({ events }) => {
       <a
         key={event.id}
         href={`/app/events/${event.id}`}
-        className="bg-white border border-gray-200 rounded-xl shadow hover:shadow-lg transition-transform transform hover:scale-105 cursor-pointer p-6 w-full max-w-md h-[300px] flex flex-col justify-between"
+        className="bg-white border border-gray-200 rounded-xl shadow hover:shadow-lg transition-transform transform hover:scale-105 cursor-pointer p-6 h-[300px] w-52 flex flex-col justify-between"
       >
         <div>
         <h2 className="text-xl font-bold text-gray-800 mb-2">{event.title}</h2>

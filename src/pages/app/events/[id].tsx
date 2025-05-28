@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { doc, getDoc, updateDoc, arrayUnion, arrayRemove, deleteField } from 'firebase/firestore';
-import { db, user } from '@/pages/api/firebase/firebase';
+import { auth, db } from '@/pages/api/firebase/firebase';
 import { useDropzone } from 'react-dropzone';
 import Cookies from 'js-cookie';
 import Aside from '@/components/Aside';
-import firebase from 'firebase/compat/app';
 import TextToSpeech from '@/components/TextToSpeech';
 
 interface Event {
@@ -35,14 +34,35 @@ const EventDetails: React.FC = () => {
   const [fileSummaries, setFileSummaries] = useState<Record<string, string>>({});
   const [summarizing, setSummarizing] = useState<Record<string, boolean>>({});
   const [selectedSummary, setSelectedSummary] = useState<string>('');
+  const [userUid, setUserUid] = useState<string>("User");
+  const [userId, setUserId] = useState<string>("");
 
-  const userId = Cookies.get('email') || '';
-  const userName = Cookies.get('name') || '';
-  const userUid = Cookies.get('uid') || '';
+  // const userId = Cookies.get('email') || '';
+  // const userUid = Cookies.get('uid') || '';
+  useEffect(() => {
+    const checkAuth = async () => {
+      const isAuthenticated = await new Promise<boolean>((resolve) => {
+        auth.onAuthStateChanged((user) => {
+          resolve(!!user);
+          const CurrentUser = auth.currentUser;
+          setUserUid(CurrentUser?.uid || "User");
+          setUserId(CurrentUser?.email || "");
+        });
+      });
+
+      if (!isAuthenticated) {
+        router.push('/auth/login'); // Redirect to login page if not authenticated
+      }
+     
+    };
+
+    checkAuth();
+  }
+  , [router]);
 
   useEffect(() => {
     const fetchEvent = async () => {
-      if (!id || !userId) return;
+      if (!id || !userUid) return; 
 
       try {
         const docRef = doc(db, 'events', id);
